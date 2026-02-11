@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор фото с сеткой для визиток</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .control-group input[type="number"],
+        .control-group input[type="color"],
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .control-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .canvas-container {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        canvas {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 20px;
+        }
+        
+        .info h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .info ul {
+            margin-left: 20px;
+            color: #666;
+        }
+        
+        .info li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Редактор фото с сеткой</h1>
+        <p class="subtitle">Создайте фон с сеткой для размещения визиток</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Размер изображения:</label>
+                <select id="sizePreset">
+                    <option value="1080x1080">Instagram пост (1080x1080)</option>
+                    <option value="1080x1920">Instagram Stories (1080x1920)</option>
+                    <option value="1200x628">Facebook пост (1200x628)</option>
+                    <option value="custom">Свой размер</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Строк в сетке:</label>
+                <input type="number" id="rows" value="3" min="1" max="10">
+            </div>
+            
+            <div class="control-group">
+                <label>Столбцов в сетке:</label>
+                <input type="number" id="cols" value="3" min="1" max="10">
+            </div>
+            
+            <div class="control-group">
+                <label>Цвет стены:</label>
+                <input type="color" id="wallColor" value="#f5f5fa">
+            </div>
+            
+            <div class="control-group">
+                <label>Цвет пола:</label>
+                <input type="color" id="floorColor" value="#d2b48c">
+            </div>
+            
+            <div class="control-group">
+                <label>Цвет сетки:</label>
+                <input type="color" id="gridColor" value="#787878">
+            </div>
+            
+            <div class="control-group">
+                <label>Позиция горизонта (%):</label>
+                <input type="number" id="horizon" value="50" min="0" max="100">
+            </div>
+            
+            <div class="control-group">
+                <label>Отступ от краев:</label>
+                <input type="number" id="margin" value="60" min="0" max="200">
+            </div>
+            
+            <div class="control-group">
+                <label>Фон (изображение):</label>
+                <input type="file" id="bgImage" accept="image/*">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-primary" onclick="generateGrid()">✨ Создать сетку</button>
+            <button class="btn-secondary" onclick="downloadImage()">💾 Скачать</button>
+            <button class="btn-secondary" onclick="resetSettings()">🔄 Сбросить</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div class="info">
+            <h3>📝 Как использовать:</h3>
+            <ul>
+                <li>Выберите размер изображения и количество ячеек в сетке</li>
+                <li>Настройте цвета стены, пола и линий сетки</li>
+                <li>Можете загрузить свое изображение как фон</li>
+                <li>Нажмите "Создать сетку" чтобы увидеть результат</li>
+                <li>Нажмите "Скачать" чтобы сохранить изображение</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let backgroundImage = null;
+
+        // Загрузка фонового изображения
+        document.getElementById('bgImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        backgroundImage = img;
+                        generateGrid();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Изменение размера при выборе пресета
+        document.getElementById('sizePreset').addEventListener('change', function() {
+            generateGrid();
+        });
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function generateGrid() {
+            // Получаем размеры
+            const preset = document.getElementById('sizePreset').value;
+            let width, height;
+            
+            if (preset === 'custom') {
+                width = 1080;
+                height = 1080;
+            } else {
+                [width, height] = preset.split('x').map(Number);
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Получаем параметры
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const wallColor = document.getElementById('wallColor').value;
+            const floorColor = document.getElementById('floorColor').value;
+            const gridColor = document.getElementById('gridColor').value;
+            const horizon = parseInt(document.getElementById('horizon').value) / 100;
+            const margin = parseInt(document.getElementById('margin').value);
+            
+            // Рисуем фон
+            if (backgroundImage) {
+                ctx.drawImage(backgroundImage, 0, 0, width, height);
+            } else {
+                // Стена
+                ctx.fillStyle = wallColor;
+                ctx.fillRect(0, 0, width, height * horizon);
+                
+                // Пол
+                ctx.fillStyle = floorColor;
+                ctx.fillRect(0, height * horizon, width, height * (1 - horizon));
+                
+                // Градиент на границе
+                const gradientHeight = 20;
+                const wallRgb = hexToRgb(wallColor);
+                const floorRgb = hexToRgb(floorColor);
+                
+                for (let i = 0; i < gradientHeight; i++) {
+                    const alpha = i / gradientHeight;
+                    const r = Math.round(wallRgb.r * (1 - alpha) + floorRgb.r * alpha);
+                    const g = Math.round(wallRgb.g * (1 - alpha) + floorRgb.g * alpha);
+                    const b = Math.round(wallRgb.b * (1 - alpha) + floorRgb.b * alpha);
+                    
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(0, height * horizon + i, width, 1);
+                }
+            }
+            
+            // Рисуем сетку
+            ctx.strokeStyle = gridColor;
+            ctx.lineWidth = 2;
+            
+            const workWidth = width - 2 * margin;
+            const workHeight = height - 2 * margin;
+            const cellWidth = workWidth / cols;
+            const cellHeight = workHeight / rows;
+            
+            // Вертикальные линии
+            for (let i = 0; i <= cols; i++) {
+                const x = margin + i * cellWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, margin);
+                ctx.lineTo(x, height - margin);
+                ctx.stroke();
+            }
+            
+            // Горизонтальные линии
+            for (let i = 0; i <= rows; i++) {
+                const y = margin + i * cellHeight;
+                ctx.beginPath();
+                ctx.moveTo(margin, y);
+                ctx.lineTo(width - margin, y);
+                ctx.stroke();
+            }
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'photo_grid.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function resetSettings() {
+            document.getElementById('sizePreset').value = '1080x1080';
+            document.getElementById('rows').value = 3;
+            document.getElementById('cols').value = 3;
+            document.getElementById('wallColor').value = '#f5f5fa';
+            document.getElementById('floorColor').value = '#d2b48c';
+            document.getElementById('gridColor').value = '#787878';
+            document.getElementById('horizon').value = 50;
+            document.getElementById('margin').value = 60;
+            document.getElementById('bgImage').value = '';
+            backgroundImage = null;
+            generateGrid();
+        }
+
+        // Генерируем сетку при загрузке
+        window.onload = function() {
+            generateGrid();
+        };
+    </script>
+</body>
+</html>
