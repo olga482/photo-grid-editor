@@ -231,8 +231,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>📸 Размещение визиток на фото</h1>
-        <p class="subtitle">Загрузите фото и визитки, перетаскивайте их мышкой</p>
+        <h1>🎂 Размещение визиток на фото тортов</h1>
+        <p class="subtitle">Добавьте визитки как водяной знак на фото ваших тортов</p>
         
         <div class="upload-section">
             <div class="upload-box">
@@ -258,9 +258,16 @@
         
         <div class="controls">
             <button class="btn-primary" onclick="addSelectedCard()">➕ Добавить визитку</button>
+            <button class="btn-secondary" onclick="toggleGrid()">📐 Показать/Скрыть сетку</button>
             <button class="btn-secondary" onclick="clearCanvas()">🗑️ Очистить всё</button>
             <button class="btn-danger" onclick="deleteSelected()">❌ Удалить выбранную</button>
             <button class="btn-primary" onclick="downloadImage()">💾 Скачать результат</button>
+        </div>
+        
+        <div class="size-control">
+            <label>Размер сетки (количество ячеек):</label>
+            <input type="range" id="gridSize" min="2" max="20" value="6">
+            <span id="gridSizeValue">6x6</span>
         </div>
         
         <div class="editor-area">
@@ -279,14 +286,19 @@
         <div class="info">
             <h3>📝 Как использовать:</h3>
             <ul>
-                <li><strong>Шаг 1:</strong> Загрузите фоновое фото (ваша фотография)</li>
+                <li><strong>Шаг 1:</strong> Загрузите фото торта</li>
                 <li><strong>Шаг 2:</strong> Загрузите визитки (можно несколько сразу)</li>
-                <li><strong>Шаг 3:</strong> Кликните на визитку слева, потом кликните на фото где хотите её разместить</li>
+                <li><strong>Шаг 3:</strong> Нажмите "Показать/Скрыть сетку" для помощи с перспективой</li>
+                <li><strong>Шаг 4:</strong> Кликните на визитку слева, потом кликните на фото где хотите её разместить</li>
                 <li><strong>Перемещение:</strong> Кликните на визитку на фото и перетащите её</li>
                 <li><strong>Изменение размера:</strong> Используйте ползунок "Размер визиток"</li>
+                <li><strong>Сетка:</strong> Помогает ровно разместить визитки, учитывая перспективу</li>
                 <li><strong>Удаление:</strong> Выберите визитку и нажмите "Удалить выбранную"</li>
-                <li><strong>Сохранение:</strong> Нажмите "Скачать результат"</li>
+                <li><strong>Сохранение:</strong> Нажмите "Скачать результат" (сетка не сохранится, только визитки)</li>
             </ul>
+            <p style="margin-top: 15px; color: #667eea; font-weight: 600;">
+                💡 Совет: Используйте сетку чтобы визитки были ровными и не выглядели криво на фото!
+            </p>
         </div>
     </div>
 
@@ -300,6 +312,8 @@
         let selectedPlacedCard = null;
         let isDragging = false;
         let dragOffset = { x: 0, y: 0 };
+        let showGrid = false;
+        let gridSize = 6;
 
         // Загрузка фонового фото
         document.getElementById('bgPhoto').addEventListener('change', function(e) {
@@ -355,6 +369,13 @@
         document.getElementById('cardSize').addEventListener('input', function(e) {
             document.getElementById('sizeValue').textContent = e.target.value + 'px';
         });
+        
+        // Изменение размера сетки
+        document.getElementById('gridSize').addEventListener('input', function(e) {
+            gridSize = parseInt(e.target.value);
+            document.getElementById('gridSizeValue').textContent = gridSize + 'x' + gridSize;
+            redraw();
+        });
 
         // Добавление визитки на холст
         function addSelectedCard() {
@@ -389,6 +410,49 @@
                 ctx.drawImage(backgroundImage, 0, 0);
             }
             
+            // Рисуем сетку если включена
+            if (showGrid && backgroundImage) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1;
+                
+                const cellWidth = canvas.width / gridSize;
+                const cellHeight = canvas.height / gridSize;
+                
+                // Вертикальные линии
+                for (let i = 0; i <= gridSize; i++) {
+                    const x = i * cellWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                // Горизонтальные линии
+                for (let i = 0; i <= gridSize; i++) {
+                    const y = i * cellHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Центральные линии толще для ориентира
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2;
+                
+                // Вертикальная центральная
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(canvas.width / 2, canvas.height);
+                ctx.stroke();
+                
+                // Горизонтальная центральная
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+            }
+            
             placedCards.forEach((card, index) => {
                 ctx.drawImage(card.image, card.x, card.y, card.width, card.height);
                 
@@ -398,6 +462,12 @@
                     ctx.strokeRect(card.x, card.y, card.width, card.height);
                 }
             });
+        }
+        
+        // Переключение сетки
+        function toggleGrid() {
+            showGrid = !showGrid;
+            redraw();
         }
 
         // Обработка кликов на холсте
@@ -471,10 +541,19 @@
                 return;
             }
             
+            // Временно отключаем сетку для сохранения
+            const wasGridShown = showGrid;
+            showGrid = false;
+            redraw();
+            
             const link = document.createElement('a');
             link.download = 'photo_with_cards.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
+            
+            // Возвращаем сетку если была включена
+            showGrid = wasGridShown;
+            redraw();
         }
     </script>
 </body>
